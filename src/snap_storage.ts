@@ -1,14 +1,26 @@
-import { DB, joinPath } from "./deps.ts";
 import {
+  DB,
+  joinPath,
+  type PreparedQuery,
+  type Row,
+  type RowObject,
+} from "./deps.ts";
+import {
+  type Content,
   hash,
   hashLength,
   snapPath,
-  type Content,
   type Snapshot,
 } from "./snapshot.ts";
 
 export class SnapStorage {
   #db: DB;
+  #createSnapQuery: PreparedQuery<Row, RowObject, [string, number, string]>;
+  #latestSnapQuery: PreparedQuery<
+    [number, string],
+    { timestamp: number; content_hash: string },
+    [string]
+  >;
 
   constructor(readonly directory = ".") {
     this.#db = new DB(joinPath(directory, "snaps.db"));
@@ -17,25 +29,29 @@ export class SnapStorage {
       timestamp INT NOT NULL,
       content_hash CHAR(${hashLength}) NOT NULL
     )`);
+
+    this.#createSnapQuery = this.#db.prepareQuery(
+      `INSERT INTO snaps (uri, timestamp, content_hash) VALUES (?, ?, ?)`,
+    );
+    this.#latestSnapQuery = this.#db.prepareQuery(
+      `SELECT timestamp, content_hash FROM snaps
+        WHERE uri = ?
+        ORDER BY timestamp DESC
+        LIMIT 1;`,
+    );
   }
 
   async createSnap(uri: string, content: Content) {
     const timestamp = Date.now() / 1000;
     const contentHash = await hash(content);
-    this.#db.query(
-      `INSERT INTO snaps (uri, timestamp, content_hash) VALUES (?, ?, ?)`,
-      [uri, timestamp, contentHash],
-    );
+    this.#createSnapQuery.execute([uri, timestamp, contentHash]);
   }
 
-  getLatestSnap(uri: string): Snapshot {
-    const [timestamp, contentHash] = this.#db.query<[number, string]>(
-      `SELECT timestamp, content_hash FROM snaps
-        WHERE uri = ?
-        ORDER BY timestamp DESC
-        LIMIT 1;`,
-      [uri],
-    )?.[0];
+  getLatestSnap(uri: string): Snapshot | undefined {
+    const snap = this.#latestSnapQuery.first([uri]);
+    if (!snap) return;
+
+    const [timestamp, contentHash] = snap;
 
     return {
       timestamp,
