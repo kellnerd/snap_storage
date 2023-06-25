@@ -1,9 +1,6 @@
 import { assert, crypto, joinPath, toHashString } from "./deps.ts";
 
-export type Content =
-  | BufferSource
-  | AsyncIterable<BufferSource>
-  | Iterable<BufferSource>;
+export type Content = ReadableStream<Uint8Array>;
 
 export type Snapshot = {
   timestamp: number;
@@ -28,4 +25,23 @@ export function snapPath(basePath: string, contentHash: string): string {
     contentHash.slice(0, dirNameLength),
     contentHash.slice(dirNameLength),
   );
+}
+
+export async function writeSnap(
+  basePath: string,
+  content: Content,
+): Promise<Snapshot> {
+  const timestamp = Date.now() / 1000;
+  const contentHash = await hash(content);
+  const path = snapPath(basePath, contentHash);
+
+  const snapFile = await Deno.create(path);
+  content.pipeTo(snapFile.writable);
+  snapFile.close();
+
+  return {
+    timestamp,
+    contentHash,
+    path,
+  };
 }

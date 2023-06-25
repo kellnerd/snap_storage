@@ -7,10 +7,10 @@ import {
 } from "./deps.ts";
 import {
   type Content,
-  hash,
   hashLength,
   snapPath,
   type Snapshot,
+  writeSnap,
 } from "./snapshot.ts";
 
 export class SnapStorage {
@@ -41,10 +41,11 @@ export class SnapStorage {
     );
   }
 
-  async createSnap(uri: string, content: Content) {
-    const timestamp = Date.now() / 1000;
-    const contentHash = await hash(content);
-    this.#createSnapQuery.execute([uri, timestamp, contentHash]);
+  async createSnap(uri: string, content: Content): Promise<Snapshot> {
+    const snap = await writeSnap(this.directory, content);
+    this.#createSnapQuery.execute([uri, snap.timestamp, snap.contentHash]);
+
+    return snap;
   }
 
   getLatestSnap(uri: string): Snapshot | undefined {
