@@ -1,6 +1,6 @@
 import { assert, crypto, joinPath, toHashString } from "./deps.ts";
 
-export type Content = ReadableStream<Uint8Array>;
+export type Content = Uint8Array | ReadableStream<Uint8Array>;
 
 export type Policy = {
   /** Maximum age of the snapshot in seconds. */
@@ -42,14 +42,23 @@ export function snapPath(basePath: string, contentHash: string): string {
 
 export async function writeSnap(
   basePath: string,
-  content: Content,
+  content: Content | string,
 ): Promise<Snapshot> {
+  if (typeof content === "string") {
+    textEncoder ??= new TextEncoder();
+    content = textEncoder.encode(content);
+  }
+
   const timestamp = now();
   const contentHash = await hash(content);
   const path = snapPath(basePath, contentHash);
 
   const snapFile = await Deno.create(path);
-  content.pipeTo(snapFile.writable);
+  if (content instanceof ReadableStream) {
+    content.pipeTo(snapFile.writable);
+  } else {
+    snapFile.write(content);
+  }
   snapFile.close();
 
   return {
@@ -58,6 +67,8 @@ export async function writeSnap(
     path,
   };
 }
+
+let textEncoder: TextEncoder;
 
 /**
  * Returns the current timestamp in seconds since the UNIX epoch.

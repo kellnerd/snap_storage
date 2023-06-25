@@ -47,7 +47,7 @@ export class SnapStorage {
     );
   }
 
-  async createSnap(uri: string, content: Content): Promise<Snapshot> {
+  async createSnap(uri: string, content: Content | string): Promise<Snapshot> {
     const snap = await writeSnap(this.directory, content);
     this.#createSnapQuery.execute([uri, snap.timestamp, snap.contentHash]);
 
