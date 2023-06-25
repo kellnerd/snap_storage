@@ -91,4 +91,8 @@ export class SnapStorage {
 
     return { ...snap, content };
   }
+
+  close() {
+    this.#db.close(true);
+  }
 }
