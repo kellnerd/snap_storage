@@ -15,10 +15,19 @@ import {
   writeSnap,
 } from "./snapshot.ts";
 
+/** Metadata and content of a snapshot for an URI. */
 export type SnapshotContent<T> = Snapshot & {
   content: T;
 };
 
+/**
+ * Provides a persistent storage mechanism for multiple snapshots of the content
+ * which is referenced by an URI (i.e. an URL or another unique ID).
+ *
+ * Each snapshot is identified by the URI and a timestamp.
+ * Identical snapshots do not waste additional storage space because the content
+ * will be deduplicated automatically using a hash function.
+ */
 export class SnapStorage {
   #db: DB;
   #createSnapQuery: PreparedQuery<Row, RowObject, [string, number, string]>;
@@ -28,7 +37,13 @@ export class SnapStorage {
     [string]
   >;
 
-  constructor(readonly directory = ".") {
+  /**
+   * Opens or creates a snapshot storage using the given data directory.
+   *
+   * If no directory is specified, a `data` folder inside the current working
+   * directory will be used.
+   */
+  constructor(readonly directory = "data") {
     this.#db = new DB(joinPath(directory, "snaps.db"));
     this.#db.execute(`CREATE TABLE IF NOT EXISTS snaps (
       uri TEXT NOT NULL,
@@ -47,6 +62,7 @@ export class SnapStorage {
     );
   }
 
+  /** Creates a new snapshot for the given URI and content. */
   async createSnap(uri: string, content: Content | string): Promise<Snapshot> {
     const snap = await writeSnap(this.directory, content);
     this.#createSnapQuery.execute([uri, snap.timestamp, snap.contentHash]);
@@ -54,6 +70,7 @@ export class SnapStorage {
     return snap;
   }
 
+  /** Returns the latest snapshot for the given URI (if one exists). */
   getLatestSnap(uri: string): Snapshot | undefined {
     const snap = this.#latestSnapQuery.first([uri]);
     if (!snap) return;
@@ -67,6 +84,11 @@ export class SnapStorage {
     };
   }
 
+  /**
+   * Returns the latest snapshot for the given URI.
+   *
+   * An optional policy can be specified to discard certain snapshots.
+   */
   getSnap(uri: string, policy: Policy = {}): Snapshot | undefined {
     const snap = this.getLatestSnap(uri);
     if (!snap || !followsPolicy(snap, policy)) return;
@@ -74,6 +96,13 @@ export class SnapStorage {
     return snap;
   }
 
+  /**
+   * Loads the latest snapshot for the given URI and its content as JSON.
+   *
+   * An optional policy can be specified to discard certain snapshots.
+   *
+   * Throws if there is no matching snapshot or if it contains no valid JSON.
+   */
   async loadJSON<T>(
     uri: string,
     policy: Policy = {},
@@ -92,6 +121,10 @@ export class SnapStorage {
     return { ...snap, content };
   }
 
+  /**
+   * Closes the storage.
+   * This must be called after usage to avoid leaking open file descriptors.
+   */
   close() {
     this.#db.close(true);
   }
