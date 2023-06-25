@@ -1,4 +1,4 @@
-import { assert, crypto, joinPath, toHashString } from "./deps.ts";
+import { assert, crypto, dirname, joinPath, toHashString } from "./deps.ts";
 
 export type Content = Uint8Array | ReadableStream<Uint8Array>;
 
@@ -52,6 +52,8 @@ export async function writeSnap(
   const timestamp = now();
   const contentHash = await hash(content);
   const path = snapPath(basePath, contentHash);
+
+  await Deno.mkdir(dirname(path), { recursive: true });
 
   const snapFile = await Deno.create(path);
   if (content instanceof ReadableStream) {
