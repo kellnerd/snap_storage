@@ -10,15 +10,11 @@ import {
   followsPolicy,
   hashLength,
   type Policy,
+  type SnapMeta,
   snapPath,
   type Snapshot,
   writeSnap,
 } from "./snapshot.ts";
-
-/** Metadata and content of a snapshot for an URI. */
-export type SnapshotContent<T> = Snapshot & {
-  content: T;
-};
 
 /**
  * Provides a persistent storage mechanism for multiple snapshots of the content
@@ -63,7 +59,7 @@ export class SnapStorage {
   }
 
   /** Creates a new snapshot for the given URI and content. */
-  async createSnap(uri: string, content: Content | string): Promise<Snapshot> {
+  async createSnap(uri: string, content: Content | string): Promise<SnapMeta> {
     const snap = await writeSnap(this.directory, content);
     this.#createSnapQuery.execute([uri, snap.timestamp, snap.contentHash]);
 
@@ -71,7 +67,7 @@ export class SnapStorage {
   }
 
   /** Returns the latest snapshot for the given URI (if one exists). */
-  getLatestSnap(uri: string): Snapshot | undefined {
+  getLatestSnap(uri: string): SnapMeta | undefined {
     const snap = this.#latestSnapQuery.first([uri]);
     if (!snap) return;
 
@@ -89,7 +85,7 @@ export class SnapStorage {
    *
    * An optional policy can be specified to discard certain snapshots.
    */
-  getSnap(uri: string, policy: Policy = {}): Snapshot | undefined {
+  getSnap(uri: string, policy: Policy = {}): SnapMeta | undefined {
     const snap = this.getLatestSnap(uri);
     if (!snap || !followsPolicy(snap, policy)) return;
 
@@ -103,10 +99,7 @@ export class SnapStorage {
    *
    * Throws if there is no matching snapshot or if it contains no valid JSON.
    */
-  async loadJSON<T>(
-    uri: string,
-    policy: Policy = {},
-  ): Promise<SnapshotContent<T>> {
+  async loadJSON<T>(uri: string, policy: Policy = {}): Promise<Snapshot<T>> {
     const snap = this.getSnap(uri, policy);
     if (!snap) throw new Error(`No matching snapshot found for '${uri}'`);
 

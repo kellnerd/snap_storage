@@ -3,23 +3,28 @@ import { assert, crypto, dirname, joinPath, toHashString } from "./deps.ts";
 export type Content = Uint8Array | ReadableStream<Uint8Array>;
 
 /** Policy which is used to filter snapshots. */
-export type Policy = {
+export interface Policy {
   /** Maximum age of the snapshot in seconds. */
   maxAge?: number;
-};
+}
 
 /** Metadata of a snapshot for an URI. */
-export type Snapshot = {
+export interface SnapMeta {
   /** Creation date and time in seconds since the UNIX epoch. */
   timestamp: number;
   /** Hash of the content. Used to determine the path. */
   contentHash: string;
   /** Path to the content. */
   path: string;
-};
+}
+
+/** Metadata and content of a snapshot for an URI. */
+export interface Snapshot<T> extends SnapMeta {
+  content: T;
+}
 
 /** Validates whether the given snapshot follows the given policy. */
-export function followsPolicy(snap: Snapshot, policy: Policy) {
+export function followsPolicy(snap: SnapMeta, policy: Policy) {
   if (policy.maxAge) {
     return now() < snap.timestamp + policy.maxAge;
   }
@@ -51,7 +56,7 @@ export function snapPath(basePath: string, contentHash: string): string {
 export async function writeSnap(
   basePath: string,
   content: Content | string,
-): Promise<Snapshot> {
+): Promise<SnapMeta> {
   if (typeof content === "string") {
     textEncoder ??= new TextEncoder();
     content = textEncoder.encode(content);
