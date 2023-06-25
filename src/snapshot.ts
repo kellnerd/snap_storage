@@ -70,11 +70,12 @@ export async function writeSnap(
 
   const snapFile = await Deno.create(path);
   if (content instanceof ReadableStream) {
-    content.pipeTo(snapFile.writable);
+    await content.pipeTo(snapFile.writable);
+    // snapFile closes automatically when the end of the stream has been reached
   } else {
-    snapFile.write(content);
+    await snapFile.write(content);
+    snapFile.close();
   }
-  snapFile.close();
 
   return {
     timestamp,
