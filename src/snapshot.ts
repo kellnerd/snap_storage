@@ -62,8 +62,14 @@ export async function writeSnap(
     content = textEncoder.encode(content);
   }
 
+  // Readable streams can only be consumed once, so we need a copy for hashing.
+  let contentForHashing = content;
+  if (content instanceof ReadableStream) {
+    [content, contentForHashing] = content.tee();
+  }
+
   const timestamp = now();
-  const contentHash = await hash(content);
+  const contentHash = await hash(contentForHashing);
   const path = snapPath(basePath, contentHash);
 
   await Deno.mkdir(dirname(path), { recursive: true });
