@@ -16,6 +16,12 @@ import {
   writeSnap,
 } from "./snapshot.ts";
 
+/** Options for caching of network resources. */
+export interface CacheOptions {
+  requestInit?: RequestInit;
+  policy?: Policy;
+}
+
 /**
  * Provides a persistent storage mechanism for multiple snapshots of the content
  * which is referenced by an URI (i.e. an URL or another unique ID).
@@ -56,6 +62,34 @@ export class SnapStorage {
         ORDER BY timestamp DESC
         LIMIT 1;`,
     );
+  }
+
+  /**
+   * Returns the latest snapshot of the given URL or fetches the resource from
+   * the network and creates a new snapshot from the response body.
+   */
+  async cache(
+    url: string | URL,
+    { requestInit, policy }: CacheOptions = {},
+  ): Promise<Snapshot<Response>> {
+    url = url.toString();
+    let response: Response;
+    let snap = this.getSnap(url, policy);
+
+    if (snap) {
+      const data = await Deno.readFile(snap.path);
+      response = new Response(data);
+    } else {
+      response = await fetch(url, requestInit);
+      if (response.ok && response.body) {
+        // Response body can only be consumed once, so we need to create a copy.
+        snap = await this.createSnap(url, response.clone().body!);
+      } else {
+        throw new Error(`Failed to fetch resource at ${url}`);
+      }
+    }
+
+    return { ...snap, content: response };
   }
 
   /** Creates a new snapshot for the given URI and content. */
