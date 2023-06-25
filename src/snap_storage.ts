@@ -15,6 +15,10 @@ import {
   writeSnap,
 } from "./snapshot.ts";
 
+export type SnapshotContent<T> = Snapshot & {
+  content: T;
+};
+
 export class SnapStorage {
   #db: DB;
   #createSnapQuery: PreparedQuery<Row, RowObject, [string, number, string]>;
@@ -68,5 +72,23 @@ export class SnapStorage {
     if (!snap || !followsPolicy(snap, policy)) return;
 
     return snap;
+  }
+
+  async loadJSON<T>(
+    uri: string,
+    policy: Policy = {},
+  ): Promise<SnapshotContent<T>> {
+    const snap = this.getSnap(uri, policy);
+    if (!snap) throw new Error(`No matching snapshot found for '${uri}'`);
+
+    const data = await Deno.readTextFile(snap.path);
+    let content: T;
+    try {
+      content = JSON.parse(data);
+    } catch (error) {
+      throw new Error(`Snapshot does not contain valid JSON: ${error}`);
+    }
+
+    return { ...snap, content };
   }
 }
