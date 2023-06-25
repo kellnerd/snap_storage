@@ -7,7 +7,9 @@ import {
 } from "./deps.ts";
 import {
   type Content,
+  followsPolicy,
   hashLength,
+  type Policy,
   snapPath,
   type Snapshot,
   writeSnap,
@@ -59,5 +61,12 @@ export class SnapStorage {
       contentHash,
       path: snapPath(this.directory, contentHash),
     };
+  }
+
+  getSnap(uri: string, policy: Policy = {}): Snapshot | undefined {
+    const snap = this.getLatestSnap(uri);
+    if (!snap || !followsPolicy(snap, policy)) return;
+
+    return snap;
   }
 }
