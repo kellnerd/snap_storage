@@ -1,0 +1,5 @@
+{
+  "tasks": {
+    "test": "deno test --allow-read=test_data/ --allow-write=test_data/"
+  }
+}

@@ -4,7 +4,7 @@ export {
   dirname,
   join as joinPath,
 } from "https://deno.land/std@0.192.0/path/mod.ts";
-export { assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
+export { assert, assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 export {
   DB,
