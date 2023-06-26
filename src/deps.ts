@@ -4,6 +4,8 @@ export { toHashString } from "https://deno.land/std@0.192.0/crypto/to_hash_strin
 export {
   dirname,
   join as joinPath,
+  resolve,
+  toFileUrl,
 } from "https://deno.land/std@0.192.0/path/mod.ts";
 
 // third-party

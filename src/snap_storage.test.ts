@@ -6,6 +6,8 @@ import {
   describe,
   it,
   joinPath,
+  resolve,
+  toFileUrl,
 } from "./deps.ts";
 import { SnapStorage } from "./snap_storage.ts";
 
@@ -68,10 +70,10 @@ describe("Snapshot storage", () => {
     );
   });
 
-  it("caches a JSON API response", async () => {
-    const url = "https://api.github.com/users/denoland";
+  it("caches a fetched JSON response", async () => {
+    const url = toFileUrl(resolve("deno.json"));
     const fetchedSnap = await snaps.cache(url);
-    const storedSnap = await snaps.loadJSON(url);
+    const storedSnap = await snaps.loadJSON(url.href);
 
     assertEquals(
       await fetchedSnap.content.json(),
