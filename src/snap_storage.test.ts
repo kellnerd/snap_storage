@@ -32,6 +32,23 @@ describe("Snapshot storage", () => {
     assert(snaps.getLatestSnap("test:unknown") === undefined);
   });
 
+  it("only retrieves an existing snapshot when it is not too old", async () => {
+    const uri = "test:plaintext";
+    await snaps.createSnap(uri, "test content");
+
+    assert(snaps.getSnap(uri), "Snapshot could not be retrieved again at all");
+
+    assert(
+      snaps.getSnap(uri, { maxAge: 9999 }),
+      "Snapshot could not be retrieved again despite large maxAge",
+    );
+
+    assert(
+      snaps.getSnap(uri, { maxAge: -9999 }) === undefined,
+      "Snapshot could be retrieved again despite negative maxAge",
+    );
+  });
+
   it("creates a JSON snapshot and retrieves it again", async () => {
     const uri = "test:json/simple";
     const data = { name: "John Doe", value: 42 };
