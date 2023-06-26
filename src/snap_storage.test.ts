@@ -1,5 +1,6 @@
 import {
   afterAll,
+  assert,
   assertEquals,
   beforeAll,
   describe,
@@ -25,6 +26,10 @@ describe("Snapshot storage", () => {
   it("opens a new database in the correct directory", async () => {
     const dbPath = joinPath(testDirectory, "snaps.db");
     await Deno.lstat(dbPath);
+  });
+
+  it("does not retrieve a snapshot of an unknown URI", () => {
+    assert(snaps.getLatestSnap("test:unknown") === undefined);
   });
 
   it("creates a JSON snapshot and retrieves it again", async () => {
