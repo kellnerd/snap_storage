@@ -1,25 +1,33 @@
-import { assertEquals } from "./deps.ts";
+import { afterAll, assertEquals, beforeAll, describe, it } from "./deps.ts";
 import { SnapStorage } from "./snap_storage.ts";
 
-Deno.test("Create a JSON snapshot and retrieve it again", async () => {
-  const snaps = new SnapStorage("test_data");
+describe("Snapshot storage", () => {
+  let snaps: SnapStorage;
 
-  const uri = "test:json/simple";
-  const data = { name: "John Doe", value: 42 };
-  const createdSnap = await snaps.createSnap(uri, JSON.stringify(data));
+  beforeAll(() => {
+    snaps = new SnapStorage("test_data");
+  });
 
-  assertEquals(
-    snaps.getLatestSnap(uri),
-    createdSnap,
-    "Retrieved snapshot does not match created snapshot",
-  );
+  afterAll(() => {
+    snaps.close();
+  });
 
-  const loadedSnap = await snaps.loadJSON(uri);
-  assertEquals(
-    loadedSnap.content,
-    data,
-    "JSON data could not be retrieved again",
-  );
+  it("creates a JSON snapshot and retrieves it again", async () => {
+    const uri = "test:json/simple";
+    const data = { name: "John Doe", value: 42 };
+    const createdSnap = await snaps.createSnap(uri, JSON.stringify(data));
 
-  snaps.close();
+    assertEquals(
+      snaps.getLatestSnap(uri),
+      createdSnap,
+      "Retrieved snapshot does not match created snapshot",
+    );
+
+    const loadedSnap = await snaps.loadJSON(uri);
+    assertEquals(
+      loadedSnap.content,
+      data,
+      "JSON data could not be retrieved again",
+    );
+  });
 });
