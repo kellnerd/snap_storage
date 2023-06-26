@@ -145,14 +145,11 @@ export class SnapStorage {
     if (!snap) throw new Error(`No matching snapshot found for '${uri}'`);
 
     const data = await Deno.readTextFile(snap.path);
-    let content: T;
     try {
-      content = JSON.parse(data);
+      return { ...snap, content: JSON.parse(data) };
     } catch (error) {
       throw new Error(`Snapshot does not contain valid JSON: ${error}`);
     }
-
-    return { ...snap, content };
   }
 
   /**
