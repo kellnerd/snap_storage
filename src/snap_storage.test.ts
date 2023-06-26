@@ -35,7 +35,7 @@ describe("Snapshot storage", () => {
     assertEquals(
       snaps.getLatestSnap(uri),
       createdSnap,
-      "Retrieved snapshot does not match created snapshot",
+      "Retrieved snapshot metadata does not match the created snapshot",
     );
 
     const loadedSnap = await snaps.loadJSON(uri);
@@ -43,6 +43,18 @@ describe("Snapshot storage", () => {
       loadedSnap.content,
       data,
       "JSON data could not be retrieved again",
+    );
+  });
+
+  it("caches a JSON API response", async () => {
+    const url = "https://api.github.com/users/denoland";
+    const fetchedSnap = await snaps.cache(url);
+    const storedSnap = await snaps.loadJSON(url);
+
+    assertEquals(
+      await fetchedSnap.content.json(),
+      storedSnap.content,
+      "Fetched JSON response has not been persisted correctly",
     );
   });
 });
