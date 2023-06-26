@@ -13,6 +13,7 @@ import {
   type SnapMeta,
   snapPath,
   type Snapshot,
+  type WriteOptions,
   writeSnap,
 } from "./snapshot.ts";
 
@@ -70,20 +71,22 @@ export class SnapStorage {
    */
   async cache(
     url: string | URL,
-    { requestInit, policy }: CacheOptions = {},
+    { requestInit, policy = {} }: CacheOptions = {},
   ): Promise<Snapshot<Response>> {
     url = url.toString();
     let response: Response;
-    let snap = this.getSnap(url, policy);
+    let snap = this.getLatestSnap(url);
 
-    if (snap) {
+    if (snap && followsPolicy(snap, policy)) {
       const data = await Deno.readFile(snap.path);
       response = new Response(data);
     } else {
       response = await fetch(url, requestInit);
       if (response.ok && response.body) {
         // Response body can only be consumed once, so we need to create a copy.
-        snap = await this.createSnap(url, response.clone().body!);
+        snap = await this.createSnap(url, response.clone().body!, {
+          previousHash: snap?.contentHash,
+        });
       } else {
         throw new Error(`Failed to fetch resource at ${url}`);
       }
@@ -93,8 +96,12 @@ export class SnapStorage {
   }
 
   /** Creates a new snapshot for the given URI and content. */
-  async createSnap(uri: string, content: Content | string): Promise<SnapMeta> {
-    const snap = await writeSnap(this.directory, content);
+  async createSnap(
+    uri: string,
+    content: Content | string,
+    options: WriteOptions = {},
+  ): Promise<SnapMeta> {
+    const snap = await writeSnap(this.directory, content, options);
     this.#createSnapQuery.execute([uri, snap.timestamp, snap.contentHash]);
 
     return snap;

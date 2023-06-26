@@ -23,6 +23,15 @@ export interface Snapshot<T> extends SnapMeta {
   content: T;
 }
 
+/** Options for creating snapshots. */
+export interface WriteOptions {
+  /**
+   * Hash of a previous snapshot's content. Used to prevent unnecessary
+   * overwriting of a snapshot file with the same content.
+   */
+  previousHash?: string;
+}
+
 /** Validates whether the given snapshot follows the given policy. */
 export function followsPolicy(snap: SnapMeta, policy: Policy) {
   if (policy.maxAge) {
@@ -56,6 +65,7 @@ export function snapPath(basePath: string, contentHash: string): string {
 export async function writeSnap(
   basePath: string,
   content: Content | string,
+  options: WriteOptions = {},
 ): Promise<SnapMeta> {
   if (typeof content === "string") {
     textEncoder ??= new TextEncoder();
@@ -72,15 +82,22 @@ export async function writeSnap(
   const contentHash = await hash(contentForHashing);
   const path = snapPath(basePath, contentHash);
 
-  await Deno.mkdir(dirname(path), { recursive: true });
-
-  const snapFile = await Deno.create(path);
-  if (content instanceof ReadableStream) {
-    await content.pipeTo(snapFile.writable);
-    // snapFile closes automatically when the end of the stream has been reached
+  // Check if there is already a snapshot file with the same content.
+  if (contentHash === options.previousHash) {
+    if (content instanceof ReadableStream) {
+      await content.cancel();
+    }
   } else {
-    await snapFile.write(content);
-    snapFile.close();
+    await Deno.mkdir(dirname(path), { recursive: true });
+
+    const snapFile = await Deno.create(path);
+    if (content instanceof ReadableStream) {
+      await content.pipeTo(snapFile.writable);
+      // snapFile closes automatically when the end of the stream has been reached
+    } else {
+      await snapFile.write(content);
+      snapFile.close();
+    }
   }
 
   return {
