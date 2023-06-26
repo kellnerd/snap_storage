@@ -1,4 +1,11 @@
-import { afterAll, assertEquals, beforeAll, describe, it } from "./deps.ts";
+import {
+  afterAll,
+  assertEquals,
+  beforeAll,
+  describe,
+  it,
+  joinPath,
+} from "./deps.ts";
 import { SnapStorage } from "./snap_storage.ts";
 
 describe("Snapshot storage", () => {
@@ -13,6 +20,11 @@ describe("Snapshot storage", () => {
   afterAll(async () => {
     snaps.close();
     await Deno.remove(testDirectory, { recursive: true });
+  });
+
+  it("opens a new database in the correct directory", async () => {
+    const dbPath = joinPath(testDirectory, "snaps.db");
+    await Deno.lstat(dbPath);
   });
 
   it("creates a JSON snapshot and retrieves it again", async () => {
