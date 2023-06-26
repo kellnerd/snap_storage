@@ -2,14 +2,17 @@ import { afterAll, assertEquals, beforeAll, describe, it } from "./deps.ts";
 import { SnapStorage } from "./snap_storage.ts";
 
 describe("Snapshot storage", () => {
+  const testDirectory = "test_data";
   let snaps: SnapStorage;
 
-  beforeAll(() => {
-    snaps = new SnapStorage("test_data");
+  beforeAll(async () => {
+    await Deno.mkdir(testDirectory);
+    snaps = new SnapStorage(testDirectory);
   });
 
-  afterAll(() => {
+  afterAll(async () => {
     snaps.close();
+    await Deno.remove(testDirectory, { recursive: true });
   });
 
   it("creates a JSON snapshot and retrieves it again", async () => {
