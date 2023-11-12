@@ -33,7 +33,8 @@ export interface CacheOptions {
  */
 export class SnapStorage {
   #db: DB;
-  #createSnapQuery: PreparedQuery<Row, RowObject, [string, number, string]>;
+  #createUriQuery: PreparedQuery<[number], RowObject, [string]>;
+  #createSnapQuery: PreparedQuery<Row, RowObject, [number, number, string]>;
   #latestSnapQuery: PreparedQuery<
     [number, string],
     { timestamp: number; content_hash: string },
@@ -48,20 +49,30 @@ export class SnapStorage {
    */
   constructor(readonly directory = "data") {
     this.#db = new DB(joinPath(directory, "snaps.db"));
-    this.#db.execute(`CREATE TABLE IF NOT EXISTS snaps (
-      uri TEXT NOT NULL,
-      timestamp INT NOT NULL,
+    this.#db.execute(`CREATE TABLE IF NOT EXISTS uri (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      value TEXT UNIQUE
+    )`);
+    this.#db.execute(`CREATE TABLE IF NOT EXISTS snap (
+      uri_id INTEGER REFERENCES uri ON DELETE CASCADE,
+      timestamp INTEGER NOT NULL,
       content_hash CHAR(${hashLength}) NOT NULL
     )`);
 
+    this.#createUriQuery = this.#db.prepareQuery(
+      `INSERT INTO uri (value) VALUES (?)
+        ON CONFLICT DO NOTHING
+        RETURNING id`,
+    );
     this.#createSnapQuery = this.#db.prepareQuery(
-      `INSERT INTO snaps (uri, timestamp, content_hash) VALUES (?, ?, ?)`,
+      `INSERT INTO snap (uri_id, timestamp, content_hash) VALUES (?, ?, ?)`,
     );
     this.#latestSnapQuery = this.#db.prepareQuery(
-      `SELECT timestamp, content_hash FROM snaps
-        WHERE uri = ?
+      `SELECT timestamp, content_hash FROM snap
+        JOIN uri ON snap.uri_id = uri.id
+        WHERE uri.value = ?
         ORDER BY timestamp DESC
-        LIMIT 1;`,
+        LIMIT 1`,
     );
   }
 
@@ -102,7 +113,8 @@ export class SnapStorage {
     options: WriteOptions = {},
   ): Promise<SnapMeta> {
     const snap = await writeSnap(this.directory, content, options);
-    this.#createSnapQuery.execute([uri, snap.timestamp, snap.contentHash]);
+    const [uriId] = this.#createUriQuery.first([uri])!;
+    this.#createSnapQuery.execute([uriId, snap.timestamp, snap.contentHash]);
 
     return snap;
   }
