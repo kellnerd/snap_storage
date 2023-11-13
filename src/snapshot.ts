@@ -1,4 +1,4 @@
-import { assert, crypto, dirname, joinPath, toHashString } from "./deps.ts";
+import { assert, crypto, dirname, encodeHex, joinPath } from "./deps.ts";
 
 export type Content = Uint8Array | ReadableStream<Uint8Array>;
 
@@ -43,7 +43,7 @@ export function followsPolicy(snap: SnapMeta, policy: Policy) {
 /** Calculates a hash over the given content. */
 export async function hash(content: Content): Promise<string> {
   const contentHash = await crypto.subtle.digest("SHA-256", content);
-  return toHashString(contentHash);
+  return encodeHex(contentHash);
 }
 
 export const hashLength = 64;

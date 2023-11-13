@@ -1,6 +1,6 @@
 // standard library
 export { crypto } from "https://deno.land/std@0.206.0/crypto/mod.ts";
-export { toHashString } from "https://deno.land/std@0.206.0/crypto/to_hash_string.ts";
+export { encodeHex } from "https://deno.land/std@0.206.0/encoding/hex.ts";
 export {
   dirname,
   join as joinPath,
@@ -17,10 +17,8 @@ export {
 } from "https://deno.land/x/sqlite@v3.8/mod.ts";
 
 // testing
-export {
-  assert,
-  assertEquals,
-} from "https://deno.land/std@0.206.0/testing/asserts.ts";
+export { assert } from "https://deno.land/std@0.206.0/assert/assert.ts";
+export { assertEquals } from "https://deno.land/std@0.206.0/assert/assert_equals.ts";
 export {
   afterAll,
   beforeAll,
