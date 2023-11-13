@@ -19,6 +19,7 @@ import {
 
 /** Options for caching of network resources. */
 export interface CacheOptions {
+  fetch?: typeof fetch;
   requestInit?: RequestInit;
   policy?: Policy;
 }
@@ -82,7 +83,7 @@ export class SnapStorage {
    */
   async cache(
     url: string | URL,
-    { requestInit, policy = {} }: CacheOptions = {},
+    { fetch = self.fetch, requestInit, policy = {} }: CacheOptions = {},
   ): Promise<Snapshot<Response>> {
     url = url.toString();
     let response: Response;
