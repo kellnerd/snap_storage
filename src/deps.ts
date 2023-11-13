@@ -14,7 +14,7 @@ export {
   type PreparedQuery,
   type Row,
   type RowObject,
-} from "https://deno.land/x/sqlite@v3.7.2/mod.ts";
+} from "https://deno.land/x/sqlite@v3.8/mod.ts";
 
 // testing
 export {
