@@ -1,12 +1,12 @@
 // standard library
-export { crypto } from "https://deno.land/std@0.192.0/crypto/mod.ts";
-export { toHashString } from "https://deno.land/std@0.192.0/crypto/to_hash_string.ts";
+export { crypto } from "https://deno.land/std@0.206.0/crypto/mod.ts";
+export { toHashString } from "https://deno.land/std@0.206.0/crypto/to_hash_string.ts";
 export {
   dirname,
   join as joinPath,
   resolve,
   toFileUrl,
-} from "https://deno.land/std@0.192.0/path/mod.ts";
+} from "https://deno.land/std@0.206.0/path/mod.ts";
 
 // third-party
 export {
@@ -20,10 +20,10 @@ export {
 export {
   assert,
   assertEquals,
-} from "https://deno.land/std@0.192.0/testing/asserts.ts";
+} from "https://deno.land/std@0.206.0/testing/asserts.ts";
 export {
   afterAll,
   beforeAll,
   describe,
   it,
-} from "https://deno.land/std@0.192.0/testing/bdd.ts";
+} from "https://deno.land/std@0.206.0/testing/bdd.ts";
