@@ -87,6 +87,7 @@ export class SnapStorage {
   ): Promise<Snapshot<Response>> {
     url = url.toString();
     let response: Response;
+    let isFresh = false;
     let snap = this.getLatestSnap(url);
 
     if (snap && followsPolicy(snap, policy)) {
@@ -99,12 +100,13 @@ export class SnapStorage {
         snap = await this.createSnap(url, response.clone().body!, {
           previousHash: snap?.contentHash,
         });
+        isFresh = true;
       } else {
         throw new Error(`Failed to fetch resource at ${url}`);
       }
     }
 
-    return { ...snap, content: response };
+    return { ...snap, content: response, isFresh };
   }
 
   /** Creates a new snapshot for the given URI and content. */

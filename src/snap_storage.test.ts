@@ -80,5 +80,9 @@ describe("Snapshot storage", () => {
       storedSnap.content,
       "Fetched JSON response has not been persisted correctly",
     );
+
+    assert(fetchedSnap.isFresh, "Fetched snapshots have to be marked as fresh");
+
+    assert(!storedSnap.isFresh, "Existing snapshots should not be fresh");
   });
 });

@@ -21,6 +21,8 @@ export interface SnapMeta {
 /** Metadata and content of a snapshot for an URI. */
 export interface Snapshot<T> extends SnapMeta {
   content: T;
+  /** Indicates that the snapshot has been created by the returning method. */
+  isFresh?: boolean;
 }
 
 /** Options for creating snapshots. */
