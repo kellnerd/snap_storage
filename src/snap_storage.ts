@@ -60,9 +60,10 @@ export class SnapStorage {
       content_hash CHAR(${hashLength}) NOT NULL
     )`);
 
+    // We have to perform an "update" on conflicts, otherwise no ID is returned.
     this.#createUriQuery = this.#db.prepareQuery(
       `INSERT INTO uri (value) VALUES (?)
-        ON CONFLICT DO NOTHING
+        ON CONFLICT DO UPDATE SET value = uri.value
         RETURNING id`,
     );
     this.#createSnapQuery = this.#db.prepareQuery(

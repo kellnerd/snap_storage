@@ -3,6 +3,7 @@ import {
   assert,
   assertEquals,
   beforeAll,
+  delay,
   describe,
   it,
   joinPath,
@@ -67,6 +68,21 @@ describe("Snapshot storage", () => {
       loadedSnap.content,
       data,
       "JSON data could not be retrieved again",
+    );
+  });
+
+  it("retrieves the latest snapshot if there are multiple", async () => {
+    const uri = "test:updated";
+
+    await snaps.createSnap(uri, JSON.stringify({ value: "old" }));
+    await delay(1000); // timestamp resolution is seconds
+    await snaps.createSnap(uri, JSON.stringify({ value: "new" }));
+
+    const snap = await snaps.loadJSON<{ value: string }>(uri);
+    assertEquals(
+      snap.content,
+      { value: "new" },
+      "Snapshot should contain the latest content",
     );
   });
 

@@ -1,4 +1,5 @@
 // standard library
+export { delay } from "https://deno.land/std@0.206.0/async/delay.ts";
 export { crypto } from "https://deno.land/std@0.206.0/crypto/mod.ts";
 export { encodeHex } from "https://deno.land/std@0.206.0/encoding/hex.ts";
 export {
