@@ -45,10 +45,10 @@ export class SnapStorage {
   /**
    * Opens or creates a snapshot storage using the given data directory.
    *
-   * If no directory is specified, a `data` folder inside the current working
-   * directory will be used.
+   * If no directory is specified, the current working directory will be used
+   * to create a `snaps.db` database file and a `snaps/` data folder.
    */
-  constructor(readonly directory = "data") {
+  constructor(readonly directory = ".") {
     this.#db = new DB(joinPath(directory, "snaps.db"));
     this.#db.execute(`CREATE TABLE IF NOT EXISTS uri (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
