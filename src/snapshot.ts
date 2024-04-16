@@ -4,8 +4,13 @@ export type Content = Uint8Array | ReadableStream<Uint8Array>;
 
 /** Policy which is used to filter snapshots. */
 export interface Policy {
-  /** Maximum age of the snapshot in seconds. */
+  /**
+   * Maximum age of the snapshot in seconds.
+   * Age is relative to {@linkcode maxTimestamp} (if given) or the current time.
+   */
   maxAge?: number;
+  /** Maximum creation date and time in seconds since the UNIX epoch. */
+  maxTimestamp?: number;
 }
 
 /** Metadata of a snapshot for an URI. */
@@ -37,7 +42,7 @@ export interface WriteOptions {
 /** Validates whether the given snapshot follows the given policy. */
 export function followsPolicy(snap: SnapMeta, policy: Policy) {
   if (policy.maxAge) {
-    return now() < snap.timestamp + policy.maxAge;
+    return (policy.maxTimestamp ?? now()) < snap.timestamp + policy.maxAge;
   }
   return true;
 }
@@ -114,6 +119,6 @@ let textEncoder: TextEncoder;
 /**
  * Returns the current timestamp in seconds since the UNIX epoch.
  */
-function now() {
+export function now() {
   return Math.floor(Date.now() / 1000);
 }

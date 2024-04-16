@@ -11,6 +11,7 @@ import {
   toFileUrl,
 } from "./deps.ts";
 import { SnapStorage } from "./snap_storage.ts";
+import { now } from "./snapshot.ts";
 
 describe("Snapshot storage", () => {
   const testDirectory = "test_data";
@@ -83,6 +84,24 @@ describe("Snapshot storage", () => {
       snap.content,
       { value: "new" },
       "Snapshot should contain the latest content",
+    );
+  });
+
+  it("retrieves a historical snapshot if there are multiple", async () => {
+    const uri = "test:historical";
+
+    await snaps.createSnap(uri, JSON.stringify({ value: "old" }));
+    const oldTs = now();
+    await delay(1000); // timestamp resolution is seconds
+    await snaps.createSnap(uri, JSON.stringify({ value: "new" }));
+
+    const snap = await snaps.loadJSON<{ value: string }>(uri, {
+      maxTimestamp: oldTs,
+    });
+    assertEquals(
+      snap.content,
+      { value: "old" },
+      "Snapshot should contain the historical content",
     );
   });
 

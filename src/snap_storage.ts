@@ -9,6 +9,7 @@ import {
   type Content,
   followsPolicy,
   hashLength,
+  now,
   type Policy,
   type SnapMeta,
   snapPath,
@@ -39,7 +40,7 @@ export class SnapStorage {
   #latestSnapQuery: PreparedQuery<
     [number, string],
     { timestamp: number; content_hash: string },
-    [string]
+    [string, number]
   >;
 
   /**
@@ -72,7 +73,7 @@ export class SnapStorage {
     this.#latestSnapQuery = this.#db.prepareQuery(
       `SELECT timestamp, content_hash FROM snap
         JOIN uri ON snap.uri_id = uri.id
-        WHERE uri.value = ?
+        WHERE uri.value = ? AND timestamp <= ?
         ORDER BY timestamp DESC
         LIMIT 1`,
     );
@@ -89,7 +90,7 @@ export class SnapStorage {
     url = url.toString();
     let response: Response;
     let isFresh = false;
-    let snap = this.getLatestSnap(url);
+    let snap = this.getLatestSnap(url, policy.maxTimestamp);
 
     if (snap && followsPolicy(snap, policy)) {
       const data = await Deno.readFile(snap.path);
@@ -123,9 +124,14 @@ export class SnapStorage {
     return snap;
   }
 
-  /** Returns the latest snapshot for the given URI (if one exists). */
-  getLatestSnap(uri: string): SnapMeta | undefined {
-    const snap = this.#latestSnapQuery.first([uri]);
+  /**
+   * Looks up the latest snapshot for the given URI (if one exists).
+   *
+   * If a maximum timestamp is given, the historically latest snapshot for that
+   * time will be queried, otherwise the current time will be used as a limit.
+   */
+  getLatestSnap(uri: string, maxTimestamp?: number): SnapMeta | undefined {
+    const snap = this.#latestSnapQuery.first([uri, maxTimestamp ?? now()]);
     if (!snap) return;
 
     const [timestamp, contentHash] = snap;
@@ -137,22 +143,18 @@ export class SnapStorage {
     };
   }
 
-  /**
-   * Returns the latest snapshot for the given URI.
-   *
-   * An optional policy can be specified to discard certain snapshots.
-   */
+  /** Looks up a snapshot for the given URI which follows the given policy. */
   getSnap(uri: string, policy: Policy = {}): SnapMeta | undefined {
-    const snap = this.getLatestSnap(uri);
+    const snap = this.getLatestSnap(uri, policy.maxTimestamp);
     if (!snap || !followsPolicy(snap, policy)) return;
 
     return snap;
   }
 
   /**
-   * Loads the latest snapshot for the given URI and its content as JSON.
+   * Loads a snapshot for the given URI and its content as JSON.
    *
-   * An optional policy can be specified to discard certain snapshots.
+   * An optional policy can be specified to filter snapshots.
    *
    * Throws if there is no matching snapshot or if it contains no valid JSON.
    */
