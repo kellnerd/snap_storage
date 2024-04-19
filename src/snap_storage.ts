@@ -18,10 +18,20 @@ import {
   writeSnap,
 } from "./snapshot.ts";
 
+/**
+ * Function for modifying the Response object returned by `fetch`
+ * before it is cached and returned to the caller.
+ *
+ * Care must be taken to ensure that the returned Promise resolves to a
+ * Response with an unused body property.
+ */
+export type ResponseMutator = (response: Response) => Promise<Response>;
+
 /** Options for caching of network resources. */
 export interface CacheOptions {
   fetch?: typeof fetch;
   requestInit?: RequestInit;
+  responseMutator?: ResponseMutator;
   policy?: Policy;
 }
 
@@ -85,7 +95,12 @@ export class SnapStorage {
    */
   async cache(
     url: string | URL,
-    { fetch = self.fetch, requestInit, policy = {} }: CacheOptions = {},
+    {
+      fetch = self.fetch,
+      requestInit,
+      responseMutator,
+      policy = {},
+    }: CacheOptions = {},
   ): Promise<Snapshot<Response>> {
     url = url.toString();
     let response: Response;
@@ -97,6 +112,9 @@ export class SnapStorage {
       response = new Response(data);
     } else {
       response = await fetch(url, requestInit);
+      if (responseMutator) {
+        response = await responseMutator(response);
+      }
       if (response.ok && response.body) {
         // Response body can only be consumed once, so we need to create a copy.
         snap = await this.createSnap(url, response.clone().body!, {

@@ -120,4 +120,19 @@ describe("Snapshot storage", () => {
 
     assert(!storedSnap.isFresh, "Existing snapshots should not be fresh");
   });
+
+  it("caches a modified fetched JSON response", async () => {
+    const url = toFileUrl(resolve("README.md"));
+    async function responseMutator(response: Response) {
+      await response.text();
+
+      return new Response(JSON.stringify({ mutation: true }), response);
+    }
+    const fetchedSnap = await snaps.cache(url, {
+      responseMutator: responseMutator,
+    });
+    const fetchedJSON = await fetchedSnap.content.json();
+
+    assert(fetchedJSON.mutation, "JSON response was not mutated");
+  });
 });

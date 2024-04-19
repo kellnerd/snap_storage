@@ -1,3 +1,7 @@
-export { type CacheOptions, SnapStorage } from "./src/snap_storage.ts";
+export {
+  type CacheOptions,
+  type ResponseMutator,
+  SnapStorage,
+} from "./src/snap_storage.ts";
 
 export { type Policy, type SnapMeta, type Snapshot } from "./src/snapshot.ts";
