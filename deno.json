@@ -1,5 +1,6 @@
 {
   "tasks": {
+    "ok": "deno fmt --check && deno lint && deno task test",
     "test": "deno test --allow-read=. --allow-write=test_data/"
   }
 }

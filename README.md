@@ -19,7 +19,5 @@ Before submitting your changes, please make sure that they pass the tests, are
 properly formatted and follow the linting rules:
 
 ```sh
-deno task test
-deno fmt --check
-deno lint
+deno task ok
 ```
