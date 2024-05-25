@@ -5,6 +5,7 @@ import {
   type Row,
   type RowObject,
 } from "./deps.ts";
+import { ResponseError } from "./error.ts";
 import {
   type Content,
   followsPolicy,
@@ -122,7 +123,7 @@ export class SnapStorage {
         });
         isFresh = true;
       } else {
-        throw new Error(`Failed to fetch resource at ${url}`);
+        throw new ResponseError(`Failed to fetch resource at ${url}`, response);
       }
     }
 
