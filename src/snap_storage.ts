@@ -71,6 +71,9 @@ export class SnapStorage {
       timestamp INTEGER NOT NULL,
       content_hash CHAR(${hashLength}) NOT NULL
     )`);
+    // Optimize lookups of latest snapshot by `uri_id`.
+    this.#db.execute(`CREATE INDEX IF NOT EXISTS idx_snap_uri_id_timestamp
+      ON snap (uri_id, timestamp DESC)`);
 
     // We have to perform an "update" on conflicts, otherwise no ID is returned.
     this.#createUriQuery = this.#db.prepareQuery(
