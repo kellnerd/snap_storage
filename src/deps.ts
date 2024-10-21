@@ -15,7 +15,7 @@ export {
   type PreparedQuery,
   type Row,
   type RowObject,
-} from "https://deno.land/x/sqlite@v3.8/mod.ts";
+} from "https://deno.land/x/sqlite@v3.9.1/mod.ts";
 
 // testing
 export { assert } from "https://deno.land/std@0.206.0/assert/assert.ts";
