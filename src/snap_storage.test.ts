@@ -1,15 +1,13 @@
+import { assert, joinPath, resolve, toFileUrl } from "./deps.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/assert_equals.ts";
+import { delay } from "https://deno.land/std@0.224.0/async/delay.ts";
 import {
   afterAll,
-  assert,
-  assertEquals,
   beforeAll,
-  delay,
   describe,
   it,
-  joinPath,
-  resolve,
-  toFileUrl,
-} from "./deps.ts";
+} from "https://deno.land/std@0.224.0/testing/bdd.ts";
+
 import { SnapStorage } from "./snap_storage.ts";
 import { now } from "./snapshot.ts";
 
