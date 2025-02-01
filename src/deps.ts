@@ -1,6 +1,6 @@
 // standard library
 export { assert } from "https://deno.land/std@0.224.0/assert/assert.ts";
-export { crypto } from "https://deno.land/std@0.224.0/crypto/mod.ts";
+export { crypto } from "https://deno.land/std@0.206.0/crypto/mod.ts";
 export { encodeHex } from "https://deno.land/std@0.224.0/encoding/hex.ts";
 export {
   dirname,
